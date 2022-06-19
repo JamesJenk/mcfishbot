@@ -1,16 +1,21 @@
-#!/bin/python
-
-import pyautogui
-import cv2
-from PIL import ImageGrab
 from time import sleep
-import numpy as npdef initializePyAutoGUI():
+
+
+import numpy as np
+import cv2
+import pyautogui
+from PIL import ImageGrab
+
+
+def initializePyAutoGUI():
     # Initialized PyAutoGUI
     # When fail-safe mode is True
     # moving the mouse to the upper-left
     # corner will abort your program. This prevents 
     # locking the program up.
-    pyautogui.FAILSAFE = Truedef take_capture(magnification):
+    pyautogui.FAILSAFE = True
+    
+def take_capture(magnification):
     mx, my = pyautogui.position()  # get the mouse cursor position
     x = mx - 15  # move to the left 15 pixels
     y = my - 15  # move up 15 pixels
@@ -27,7 +32,9 @@ import numpy as npdef initializePyAutoGUI():
                   interpolation=cv2.INTER_CUBIC
               ), cv2.COLOR_BGR2GRAY
           )  # magnify the screenshot and convert to grayscale
-    return resdef autofish(tick_interval, threshold, magnification):
+
+    return res
+def autofish(tick_interval, threshold, magnification):
     pyautogui.rightClick()  # cast the fishing line
     sleep(2)  # wait a couple of seconds before taking captures
     img = take_capture(magnification)  # take initial capture 
@@ -39,7 +46,8 @@ import numpy as npdef initializePyAutoGUI():
     #     > threshold is the number of those pixels (0) 
     # exit the loop and reel in the catch (pyautogui.rightClick()).    # Finally, wait a second and leave the auto-fish method.
     # This will cast, wait and catch one interval. See main method 
-    # for looping.    while np.sum(img == 0) > threshold:  
+    # for looping.
+    while np.sum(img == 0) > threshold:  
         img = take_capture(magnification)
         sleep(tick_interval)
         cv2.imshow('window', img)
@@ -49,7 +57,7 @@ import numpy as npdef initializePyAutoGUI():
     pyautogui.rightClick()
     sleep(1)
 # This will wait 5 seconds to allow switching from Python program
-# to Minecraft. Then loop through the autofish method for 100 
+# to Minecraft. Then loop through the autofish method for 1q0 
 # cast and catch loops.
 # 
 # Launch Minecraft and load up your world
@@ -59,14 +67,14 @@ import numpy as npdef initializePyAutoGUI():
 # Position character so that it is ready to cast 
 # and the cursor will be immediately on top of the bobber 
 # Let it run...
-# If you need more time, change sleep(5) to something moredef main():
+# If you need more time, change sleep(5) to something more
+def main():
     initializePyAutoGUI()
     sleep(5)  
     i = 0
     while i < 100:
         autofish(0.01, 0, 5)
         i += 1
-
 
 if __name__ == "__main__":
     main()
