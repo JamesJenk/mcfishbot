@@ -1,80 +1,60 @@
+#!/bin/python
+
+# System requirements: A software that can interpret bash, xdotool needs to be installed (it's free)
+
+# Importing modules for the bot to work
 from time import sleep
-
-
 import numpy as np
 import cv2
-import pyautogui
+from pyautogui import press, rightClick, position, size, screenshot
 from PIL import ImageGrab
+from subprocess import run, Popen, PIPE
+
+SET_WINDOW_CMD = 'xdotool windowactivate `xdotool search --name "Minecraft 1.*"`' # Set a bash command for finding a window with the name 'Minecraft.1'
+GET_WINDOW_GEOMETRY = 'xdotool getwindowgeometry `xdotool search --name "Minecraft 1.*"`' # Set a bash command for finding the size (in pixels)
+RIGHT_CLICK = 'xdotool click 3' # Set a bash command for right clicking in bash
+
+run(SET_WINDOW_CMD, shell=True) # This runs the command in your 
+
+# Leave time for the window to activate
+sleep(0.5)
+press('esc') # This key is pressed to bring your computer out of the pause game screen
+
+geometry = run(GET_WINDOW_GEOMETRY, shell=True, text=True, stdout=PIPE).stdout.split() # running the command in bash, ouptut is assigned to list
+# splitting the output in a string (the element) into a list for easier access to information
+pos_text = geometry[3].split(',')
+size_text = geometry[7].split('x')
+# The window position on the screen
+pos_x = int(pos_text[0]) 
+pos_y = int(pos_text[1])
+
+# The window dimensions
+size_x = int(size_text[0])
+size_y = int(size_text[1])
+x, y = position()
+side_size = int(size_x / 32) if size_x >= 128 else 4
+# print(pos_x, pos_y, size_x, size_y)
 
 
-def initializePyAutoGUI():
-    # Initialized PyAutoGUI
-    # When fail-safe mode is True
-    # moving the mouse to the upper-left
-    # corner will abort your program. This prevents 
-    # locking the program up.
-    pyautogui.FAILSAFE = True
-    
-def take_capture(magnification):
-    mx, my = pyautogui.position()  # get the mouse cursor position
-    x = mx - 15  # move to the left 15 pixels
-    y = my - 15  # move up 15 pixels
-    capture = ImageGrab.grab(
-                  bbox=(x, y, x + 30, y + 30)
-              )  # get the box down and to the right 15 pixels (from the cursor - 30 from the x, y position)
-    arr = np.array(capture)  # convert the image to numpy array
-    res = cv2.cvtColor(
-              cv2.resize(
-                  arr, 
-                  None, 
-                  fx=magnification, 
-                  fy=magnification, 
-                  interpolation=cv2.INTER_CUBIC
-              ), cv2.COLOR_BGR2GRAY
-          )  # magnify the screenshot and convert to grayscale
+# Need some time for the menu GUIO to clear before taking the first screen shot
+sleep(0.5)
 
-    return res
-def autofish(tick_interval, threshold, magnification):
-    pyautogui.rightClick()  # cast the fishing line
-    sleep(2)  # wait a couple of seconds before taking captures
-    img = take_capture(magnification)  # take initial capture 
-    
-    # Continue looping to take a capture and convert and check 
-    # until there are no black pixels in the capture. This will 
-    # display the image, but it isn't necessary (the imshow method).    # Once there are no black pixels in the capture:
-    #     np.sum(img == 0) is looking for black pixels
-    #     > threshold is the number of those pixels (0) 
-    # exit the loop and reel in the catch (pyautogui.rightClick()).    # Finally, wait a second and leave the auto-fish method.
-    # This will cast, wait and catch one interval. See main method 
-    # for looping.
-    while np.sum(img == 0) > threshold:  
-        img = take_capture(magnification)
-        sleep(tick_interval)
-        cv2.imshow('window', img)
-        if cv2.waitKey(25) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
-    pyautogui.rightClick()
-    sleep(1)
-# This will wait 5 seconds to allow switching from Python program
-# to Minecraft. Then loop through the autofish method for 1q0 
-# cast and catch loops.
-# 
-# Launch Minecraft and load up your world
-# Equip your fishing pole and be ready to cast into a fishable area
-# Run program through IDLE or your IDE
-# Switch to the Minecraft while running
-# Position character so that it is ready to cast 
-# and the cursor will be immediately on top of the bobber 
-# Let it run...
-# If you need more time, change sleep(5) to something more
-def main():
-    initializePyAutoGUI()
-    sleep(5)  
-    i = 0
-    while i < 100:
-        autofish(0.01, 0, 5)
-        i += 1
+# Get screenshot
+average = 150.0 # set an estimated average
+count = 100 # set an estimated count
+for i in range(1000):
+    image = ImageGrab.grab(bbox=(x-side_size, y-side_size, x+side_size, y+side_size)) # Takes an image box based off the centre of the screen
+    image = image.convert('L') # Convert image into black and white
+    data = np.histogram(np.array(image), bins=16, range=(0,16)) # Converts the image into a histogram
+    threshold = average / 3 # The threshold is a third of the average black found on the image
+    average = (average * count + data[0][0]) / (count + 1) # This calculates the average
+    count += 1
+    if data[0][0] < threshold: 
+        run(RIGHT_CLICK, shell=True) # This right clicks with xdotool in bash, pulls fishing rod back
+        sleep(2)  # wait a couple of seconds before taking captures
+        run(RIGHT_CLICK, shell=True) # Throw's rod back in
+        sleep(1)
+    print('Data: ', data[0][0], 'Threshold: ', threshold)
+    sleep(0.1)
 
-if __name__ == "__main__":
-    main()
+image.show() # Shows the image taken
