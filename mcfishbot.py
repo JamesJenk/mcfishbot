@@ -5,7 +5,6 @@
 # Importing modules for the bot to work
 from time import sleep
 import numpy as np
-import cv2
 from pyautogui import press, rightClick, position, size, screenshot
 from PIL import ImageGrab
 from subprocess import run, Popen, PIPE
@@ -44,7 +43,7 @@ average = 150.0 # set an estimated average
 count = 100 # set an estimated count
 for i in range(1000):
     image = ImageGrab.grab(bbox=(x-side_size, y-side_size, x+side_size, y+side_size)) # Takes an image box based off the centre of the screen
-    image = image.convert('L') # Convert image into black and white
+    image = image.convert('L') # Convert image into greyscale
     data = np.histogram(np.array(image), bins=16, range=(0,16)) # Converts the image into a histogram
     threshold = average / 3 # The threshold is a third of the average black found on the image
     average = (average * count + data[0][0]) / (count + 1) # This calculates the average
